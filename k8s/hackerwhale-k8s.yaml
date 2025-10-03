@@ -2,10 +2,10 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: hackerwhale-k8s
-spec:
-  containers:
-    - name: hackerwhale
-      image: 0xtiago/hackerwhale:latest
+    spec:
+      containers:
+      - name: hackerwhale
+        image: gpxlnx/hackerwhale:latest
       command: ["/bin/zsh", "-c", "while true; do sleep 30; done;"]
       tty: true
       stdin: true

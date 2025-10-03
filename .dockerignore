@@ -1,0 +1,42 @@
+# HackerWhale - DockerIgnore
+
+# Data directory
+data/
+
+# Documentation (not needed in image)
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+
+# Scripts not needed in image
+publish.sh
+distrobox-setup.sh
+
+# Test files
+test/
+tests/
+
+# Assets (images not needed in image)
+assets/
+
+# License
+LICENSE

@@ -1,6 +1,6 @@
 #!/bin/bash
 # expansion_script.sh
-# tiagotavares.io | github.com/0xtiago
+# github.com/gpxlnx
 
 echo "HackerWhale - Expansion script is being executed."
 
@@ -95,6 +95,50 @@ setupOSRequirements (){
     zip \
     zsh 
     
+}
+
+setupGolang(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    # Golang já vem instalado na imagem base, apenas garantindo PATH
+    if ! command -v go &> /dev/null; then
+        echo "Go não encontrado, instalando..."
+        apt install -y golang
+    fi
+    
+    # Garantir que o GOPATH está configurado
+    export GOPATH=/root/go
+    export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+    
+    echo "Go version: $(go version)"
+}
+
+setupWordlists(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    cd ${WLPATH}
+    
+    # SecLists - THE essential wordlist collection
+    if [ ! -d "${WLPATH}/SecLists" ]; then
+        echo "Downloading SecLists..."
+        git clone --depth 1 https://github.com/danielmiessler/SecLists.git
+    fi
+    
+    # Assetnote Wordlists
+    if [ ! -d "${WLPATH}/assetnote" ]; then
+        echo "Downloading Assetnote wordlists..."
+        mkdir -p assetnote
+        cd assetnote
+        wget https://wordlists-cdn.assetnote.io/data/manual/best-dns-wordlist.txt
+        wget https://wordlists-cdn.assetnote.io/data/manual/2m-subdomains.txt
+        cd ${WLPATH}
+    fi
+    
+    # Jhaddix All.txt
+    if [ ! -f "${WLPATH}/all.txt" ]; then
+        echo "Downloading Jhaddix all.txt..."
+        wget https://gist.githubusercontent.com/jhaddix/86a06c5dc309d08580a018c66354a056/raw/96f4e51d96b2203f19f6381c8c545b278eaa0837/all.txt
+    fi
+    
+    echo "Wordlists instaladas em ${WLPATH}"
 }
 
 
@@ -363,9 +407,9 @@ Kubectl(){
     echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
     cd /tmp
     apt-get install -y apt-transport-https ca-certificates curl gnupg
-    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
     chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+    echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
     chmod 644 /etc/apt/sources.list.d/kubernetes.list
     apt-get update
     apt-get install -y kubelet kubeadm kubectl
@@ -602,6 +646,49 @@ WPScan(){
     gem install wpscan
 }
 
+Katana(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install -v github.com/projectdiscovery/katana/cmd/katana@latest
+}
+
+Interactsh(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+}
+
+Tlsx(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install -v github.com/projectdiscovery/tlsx/cmd/tlsx@latest
+}
+
+Uncover(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install -v github.com/projectdiscovery/uncover/cmd/uncover@latest
+}
+
+GAP(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install -v github.com/xm1k3/cent@latest
+}
+
+Crlfuzz(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install -v github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest
+}
+
+X8(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    cd ${TOOLSPATH}
+    wget https://github.com/Sh1Yo/x8/releases/latest/download/x8_Linux_x86_64 -O x8
+    chmod +x x8
+    ln -s ${TOOLSPATH}/x8 ${DIRBINPATH}/x8
+}
+
+Jaeles(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install -v github.com/jaeles-project/jaeles@latest
+}
+
 #FIM DE INSTALAÇÃO DE FERRAMENTAS #################################
 
 #INICIO DE CONFIGURACOES FINAIS #################################
@@ -651,6 +738,7 @@ callRequirements(){
     setupEnvironment
     setupOSRequirements
     setupGolang
+    setupWordlists
 }
 
 callInstallTools(){
@@ -727,6 +815,17 @@ callInstallTools(){
     Waybackurls
     wafw00f
     WPScan
+    Katana
+    Interactsh
+    Tlsx
+    Uncover
+    GAP
+    Crlfuzz
+    X8
+    Jaeles
+    JsubFinder
+    PureDNS
+    Dnsgen
 }
 
 

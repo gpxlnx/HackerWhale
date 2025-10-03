@@ -1,0 +1,184 @@
+#!/bin/bash
+# HackerWhale Wrapper Script
+# Easy access to HackerWhale container with proper root access
+
+set -e
+
+CONTAINER_NAME="hackerwhale"
+IMAGE="hackerwhale:latest"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# Check if container exists
+container_exists() {
+    distrobox list 2>/dev/null | grep -q "^[a-z0-9]* | ${CONTAINER_NAME}"
+}
+
+# Create container if doesn't exist
+ensure_container() {
+    if ! container_exists; then
+        echo -e "${YELLOW}[!] Container not found. Creating...${NC}"
+        distrobox create \
+            --name ${CONTAINER_NAME} \
+            --image ${IMAGE} \
+            --yes
+        echo -e "${GREEN}[✓] Container created${NC}"
+    fi
+}
+
+# Main function
+main() {
+    local command=$1
+    
+    case "$command" in
+        root|r|-r|--root)
+            # Enter as root with shared workspace
+            ensure_container
+            echo -e "${BLUE}[+] Entering HackerWhale as root...${NC}"
+            echo -e "${YELLOW}[i] Shared workspace: ~/hackerwhale-workspace${NC}"
+            echo -e "${YELLOW}[i] Inside container: /root/workspace${NC}"
+            mkdir -p ~/hackerwhale-workspace
+            distrobox enter ${CONTAINER_NAME} -- sudo bash -c "
+                ln -sfn /home/\$USER/hackerwhale-workspace /root/workspace 2>/dev/null || true
+                cd /root/workspace
+                exec zsh -l
+            "
+            ;;
+        
+        user|u|-u|--user)
+            # Enter as user
+            ensure_container
+            echo -e "${BLUE}[+] Entering HackerWhale as user...${NC}"
+            distrobox enter ${CONTAINER_NAME}
+            ;;
+        
+        run|exec|-e|--exec)
+            # Execute command as root
+            ensure_container
+            shift
+            echo -e "${BLUE}[+] Executing: $@${NC}"
+            distrobox enter ${CONTAINER_NAME} -- sudo bash -c "export PATH=/root/go/bin:\$PATH && $*"
+            ;;
+        
+        stop)
+            # Stop container
+            echo -e "${YELLOW}[+] Stopping container...${NC}"
+            distrobox stop ${CONTAINER_NAME}
+            echo -e "${GREEN}[✓] Container stopped${NC}"
+            ;;
+        
+        rm|remove|delete)
+            # Remove container
+            echo -e "${YELLOW}[!] Removing container...${NC}"
+            distrobox rm ${CONTAINER_NAME} -f
+            echo -e "${GREEN}[✓] Container removed${NC}"
+            ;;
+        
+        recreate|rebuild)
+            # Recreate container
+            echo -e "${YELLOW}[+] Recreating container...${NC}"
+            distrobox rm ${CONTAINER_NAME} -f 2>/dev/null || true
+            distrobox create \
+                --name ${CONTAINER_NAME} \
+                --image ${IMAGE} \
+                --yes
+            echo -e "${GREEN}[✓] Container recreated${NC}"
+            ;;
+        
+        list|ls)
+            # List containers
+            distrobox list
+            ;;
+        
+        update)
+            # Update tools inside container
+            ensure_container
+            echo -e "${BLUE}[+] Updating tools...${NC}"
+            distrobox enter ${CONTAINER_NAME} -- sudo bash -c 'export PATH=/root/go/bin:$PATH && \
+                echo "[+] Updating subfinder..." && \
+                go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
+                echo "[+] Updating httpx..." && \
+                go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
+                echo "[+] Updating nuclei..." && \
+                go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
+                echo "[+] Updating nuclei templates..." && \
+                nuclei -update-templates && \
+                echo "[✓] Tools updated!"'
+            ;;
+        
+        version|v|-v|--version)
+            # Show versions
+            ensure_container
+            echo -e "${BLUE}HackerWhale Tool Versions:${NC}"
+            distrobox enter ${CONTAINER_NAME} -- sudo bash -c 'export PATH=/root/go/bin:$PATH && \
+                echo "  subfinder: $(subfinder -version 2>&1 | grep -oP "v[\d.]+" | head -1)" && \
+                echo "  httpx:     $(httpx -version 2>&1 | grep -oP "v[\d.]+" | head -1)" && \
+                echo "  nuclei:    $(nuclei -version 2>&1 | grep -oP "v[\d.]+" | head -1)"'
+            ;;
+        
+        help|-h|--help)
+            cat << EOF
+${BLUE}HackerWhale Wrapper${NC} - Easy access to HackerWhale container
+
+${YELLOW}Usage:${NC}
+  hw [command] [options]
+
+${YELLOW}Commands:${NC}
+  ${GREEN}(no args)${NC}      Enter container as root (default)
+  ${GREEN}root, r${NC}        Enter container as root
+  ${GREEN}user, u${NC}        Enter container as regular user
+  ${GREEN}run <cmd>${NC}      Execute command as root
+  ${GREEN}update${NC}         Update all tools to latest versions
+  ${GREEN}version, v${NC}     Show tool versions
+  ${GREEN}list, ls${NC}       List distrobox containers
+  ${GREEN}stop${NC}           Stop the container
+  ${GREEN}recreate${NC}       Recreate the container
+  ${GREEN}remove, rm${NC}     Remove the container
+  ${GREEN}help, -h${NC}       Show this help
+
+${YELLOW}Examples:${NC}
+  hw                          ${BLUE}# Enter as root (interactive)${NC}
+  hw root                     ${BLUE}# Same as above${NC}
+  hw run subfinder -version   ${BLUE}# Run command as root${NC}
+  hw run "cd /root && ls"     ${BLUE}# Run multiple commands${NC}
+  hw update                   ${BLUE}# Update all tools${NC}
+  hw version                  ${BLUE}# Check versions${NC}
+
+${YELLOW}Quick Start:${NC}
+  1. ${GREEN}hw${NC}                    ${BLUE}# Enter container${NC}
+  2. Inside, you're already root!
+  3. ${GREEN}subfinder -d example.com${NC}
+  4. ${GREEN}exit${NC}                  ${BLUE}# Leave container${NC}
+
+EOF
+            ;;
+        
+        "")
+            # Default: enter as root with shared workspace
+            ensure_container
+            echo -e "${BLUE}[+] Entering HackerWhale as root...${NC}"
+            echo -e "${YELLOW}[i] Shared workspace: ~/hackerwhale-workspace <-> /root/workspace${NC}"
+            echo -e "${YELLOW}[i] Type 'exit' to leave the container${NC}"
+            mkdir -p ~/hackerwhale-workspace
+            distrobox enter ${CONTAINER_NAME} -- sudo bash -c "
+                ln -sfn /home/\$USER/hackerwhale-workspace /root/workspace 2>/dev/null || true
+                cd /root/workspace
+                exec zsh -l
+            "
+            ;;
+        
+        *)
+            echo -e "${RED}[!] Unknown command: $command${NC}"
+            echo -e "${YELLOW}[i] Run 'hw help' for usage${NC}"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
+

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  hackerwhale:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        EXPANSION_SCRIPT_LOCAL: scripts/expansion_script.sh
+    container_name: hackerwhale
+    hostname: HackerWhale
+    stdin_open: true
+    tty: true
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./data:/workdir
+      - ./configs:/root/.config
+      - zsh_history:/root/.zsh_history_data
+    environment:
+      - TERM=xterm-256color
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  # PostgreSQL para armazenar resultados (opcional)
+  postgres:
+    image: postgres:16-alpine
+    container_name: hackerwhale-db
+    environment:
+      POSTGRES_DB: hackerwhale
+      POSTGRES_USER: hacker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    profiles:
+      - database
+
+  # RabbitMQ para filas de tasks (opcional)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: hackerwhale-queue
+    environment:
+      RABBITMQ_DEFAULT_USER: hacker
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-changeme}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    profiles:
+      - queue
+
+  # Redis para cache (opcional)
+  redis:
+    image: redis:7-alpine
+    container_name: hackerwhale-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    profiles:
+      - cache
+
+volumes:
+  zsh_history:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  default:
+    name: hackerwhale-network
+

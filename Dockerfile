@@ -83,5 +83,5 @@ WORKDIR /workdir
 CMD ["tail", "-f", "/dev/null"]
 
 # docker build --build-arg EXPANSION_SCRIPT_LOCAL=expansion_script.sh -t hackerwhale .
-# docker build --build-arg EXPANSION_SCRIPT_URL=https://github.com/0xtiago/expansion_script.sh -t hackerwhale .
+# docker build --build-arg EXPANSION_SCRIPT_URL=https://github.com/gpxlnx/expansion_script.sh -t hackerwhale .
 

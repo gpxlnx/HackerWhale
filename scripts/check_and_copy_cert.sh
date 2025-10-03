@@ -1,6 +1,6 @@
 #!/bin/sh
 # check_and_copy_cert.sh
-# tiagotavares.io | github.com/0xtiago
+# github.com/gpxlnx
 
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <path_to_cert>"
