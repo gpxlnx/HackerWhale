@@ -194,6 +194,11 @@ Burl(){
     go install -v github.com/tomnomnom/burl@latest
 }
 
+Bbscope(){
+    echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
+    go install github.com/sw33tLie/bbscope@latest
+}
+
 Brutespray(){
     echo -e "${RED}[+]${FUNCNAME[0]}${NC}"
     apt install brutespray -y
@@ -751,6 +756,7 @@ callInstallTools(){
     arp-scan
     Assetfinder
     Burl
+    Bbscope
     Brutespray
     ChaosClient
     # Chekov

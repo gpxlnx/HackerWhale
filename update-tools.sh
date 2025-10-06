@@ -29,6 +29,7 @@ GO_TOOLS=(
     "github.com/projectdiscovery/uncover/cmd/uncover@latest"
     "github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest"
     "github.com/owasp-amass/amass/v4/...@master"
+    "github.com/sw33tLie/bbscope@latest"
     "github.com/tomnomnom/anew@latest"
     "github.com/tomnomnom/assetfinder@latest"
     "github.com/tomnomnom/httprobe@latest"
